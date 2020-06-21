@@ -50,7 +50,7 @@ namespace UnityStandardAssets.Effects
 
                     Vector3 diff = closestPointOnCollider - this.transform.position;
                     float distance = diff.magnitude;
-                    float distanceFactor = 1.0f - Mathf.Clamp01(distance / r);
+                    float distanceFactor = Mathf.Sqrt(1.0f - Mathf.Clamp01(distance / r));
 
                     rb.AddForceAtPosition((diff.normalized * explosionForce + Vector3.up * upwardsModifier) * multiplier * distanceFactor / colliders.Count, closestPointOnCollider, ForceMode.Impulse);
 
