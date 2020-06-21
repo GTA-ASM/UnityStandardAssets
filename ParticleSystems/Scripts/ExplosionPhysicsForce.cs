@@ -21,19 +21,43 @@ namespace UnityStandardAssets.Effects
             float multiplier = GetComponent<ParticleSystemMultiplier>().multiplier;
 
             float r = radius * multiplier;
-            var cols = Physics.OverlapSphere(transform.position, r);
-            var rigidbodies = new List<Rigidbody>();
+            var cols = Physics.OverlapSphere(this.transform.position, r);
+
+            var rigidbodies = new Dictionary<Rigidbody, List<Collider>>();
             foreach (var col in cols)
             {
-                if (col.attachedRigidbody != null && !rigidbodies.Contains(col.attachedRigidbody))
+                if (col.attachedRigidbody != null)
                 {
-                    rigidbodies.Add(col.attachedRigidbody);
+                    if (rigidbodies.ContainsKey(col.attachedRigidbody))
+                    {
+                        rigidbodies[col.attachedRigidbody].Add(col);
+                    }
+                    else
+                    {
+                        rigidbodies.Add(col.attachedRigidbody, new List<Collider>() { col });
+                    }
                 }
             }
-            foreach (var rb in rigidbodies)
+
+            foreach (var pair in rigidbodies)
             {
-                rb.AddExplosionForce(explosionForce*multiplier, transform.position, r, 1 * multiplier * upwardsModifier, ForceMode.Impulse);
+                Rigidbody rb = pair.Key;
+                var colliders = pair.Value;
+
+                foreach (var collider in colliders)
+                {
+                    Vector3 closestPointOnCollider = collider.ClosestPoint(this.transform.position);
+
+                    Vector3 diff = closestPointOnCollider - this.transform.position;
+                    float distance = diff.magnitude;
+                    float distanceFactor = 1.0f - Mathf.Clamp01(distance / r);
+
+                    rb.AddForceAtPosition((diff.normalized * explosionForce + Vector3.up * upwardsModifier) * multiplier * distanceFactor / colliders.Count, closestPointOnCollider, ForceMode.Impulse);
+
+                }
+
             }
+
         }
     }
 }
