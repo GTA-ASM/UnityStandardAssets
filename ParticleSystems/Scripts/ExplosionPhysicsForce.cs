@@ -8,6 +8,8 @@ namespace UnityStandardAssets.Effects
     public class ExplosionPhysicsForce : MonoBehaviour
     {
         public float explosionForce = 4;
+        public float upwardsModifier = 1f;
+        public float radius = 10f;
 
 
         private IEnumerator Start()
@@ -18,7 +20,7 @@ namespace UnityStandardAssets.Effects
 
             float multiplier = GetComponent<ParticleSystemMultiplier>().multiplier;
 
-            float r = 10*multiplier;
+            float r = radius * multiplier;
             var cols = Physics.OverlapSphere(transform.position, r);
             var rigidbodies = new List<Rigidbody>();
             foreach (var col in cols)
@@ -30,7 +32,7 @@ namespace UnityStandardAssets.Effects
             }
             foreach (var rb in rigidbodies)
             {
-                rb.AddExplosionForce(explosionForce*multiplier, transform.position, r, 1*multiplier, ForceMode.Impulse);
+                rb.AddExplosionForce(explosionForce*multiplier, transform.position, r, 1 * multiplier * upwardsModifier, ForceMode.Impulse);
             }
         }
     }
