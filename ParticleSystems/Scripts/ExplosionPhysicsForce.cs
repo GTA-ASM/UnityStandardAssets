@@ -44,6 +44,9 @@ namespace UnityStandardAssets.Effects
                 Rigidbody rb = pair.Key;
                 var colliders = pair.Value;
 
+                // apply higher force on objects with higher mass
+                float massFactor = Mathf.Pow(rb.mass, 0.95f);
+
                 foreach (var collider in colliders)
                 {
                     Vector3 closestPointOnCollider = collider.ClosestPoint(this.transform.position);
@@ -52,7 +55,7 @@ namespace UnityStandardAssets.Effects
                     float distance = diff.magnitude;
                     float distanceFactor = Mathf.Sqrt(1.0f - Mathf.Clamp01(distance / r));
 
-                    rb.AddForceAtPosition((diff.normalized * explosionForce + Vector3.up * upwardsModifier) * multiplier * distanceFactor / colliders.Count, closestPointOnCollider, ForceMode.Impulse);
+                    rb.AddForceAtPosition((diff.normalized * explosionForce + Vector3.up * upwardsModifier) * multiplier * distanceFactor * massFactor / colliders.Count, closestPointOnCollider, ForceMode.Impulse);
 
                 }
 
