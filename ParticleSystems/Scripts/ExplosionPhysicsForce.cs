@@ -8,8 +8,6 @@ namespace UnityStandardAssets.Effects
     public class ExplosionPhysicsForce : MonoBehaviour
     {
         public float explosionForce = 4;
-        public float upwardsModifier = 1f;
-        public float radius = 10f;
 
 
         private IEnumerator Start()
@@ -20,47 +18,20 @@ namespace UnityStandardAssets.Effects
 
             float multiplier = GetComponent<ParticleSystemMultiplier>().multiplier;
 
-            float r = radius * multiplier;
-            var cols = Physics.OverlapSphere(this.transform.position, r);
-
-            var rigidbodies = new Dictionary<Rigidbody, List<Collider>>();
+            float r = 10*multiplier;
+            var cols = Physics.OverlapSphere(transform.position, r);
+            var rigidbodies = new List<Rigidbody>();
             foreach (var col in cols)
             {
-                if (col.attachedRigidbody != null)
+                if (col.attachedRigidbody != null && !rigidbodies.Contains(col.attachedRigidbody))
                 {
-                    if (rigidbodies.ContainsKey(col.attachedRigidbody))
-                    {
-                        rigidbodies[col.attachedRigidbody].Add(col);
-                    }
-                    else
-                    {
-                        rigidbodies.Add(col.attachedRigidbody, new List<Collider>() { col });
-                    }
+                    rigidbodies.Add(col.attachedRigidbody);
                 }
             }
-
-            foreach (var pair in rigidbodies)
+            foreach (var rb in rigidbodies)
             {
-                Rigidbody rb = pair.Key;
-                var colliders = pair.Value;
-
-                // apply higher force on objects with higher mass
-                float massFactor = Mathf.Pow(rb.mass, 0.95f);
-
-                foreach (var collider in colliders)
-                {
-                    Vector3 closestPointOnCollider = collider.ClosestPoint(this.transform.position);
-
-                    Vector3 diff = closestPointOnCollider - this.transform.position;
-                    float distance = diff.magnitude;
-                    float distanceFactor = Mathf.Sqrt(1.0f - Mathf.Clamp01(distance / r));
-
-                    rb.AddForceAtPosition((diff.normalized * explosionForce + Vector3.up * upwardsModifier) * multiplier * distanceFactor * massFactor / colliders.Count, closestPointOnCollider, ForceMode.Impulse);
-
-                }
-
+                rb.AddExplosionForce(explosionForce*multiplier, transform.position, r, 1*multiplier, ForceMode.Impulse);
             }
-
         }
     }
 }
